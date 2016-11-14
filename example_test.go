@@ -7,7 +7,7 @@ import (
 	"github.com/go-http-utils/fresh"
 )
 
-func ExampleFresh_IsFresh() {
+func Example() {
 	reqHeader, resHeader := make(http.Header), make(http.Header)
 
 	reqHeader.Set("if-none-match", "foo")
