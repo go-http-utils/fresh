@@ -7,7 +7,7 @@ import (
 )
 
 // Version is this package's verison
-const Version = "0.0.2"
+const Version = "0.1.0"
 
 // HTTP header fileds
 const (
