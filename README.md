@@ -21,14 +21,15 @@ import (
   "net/http"
 
   "github.com/go-http-utils/fresh"
+  "github.com/go-http-utils/headers"
 )
 ```
 
 ```go
 reqHeader, resHeader := make(http.Header), make(http.Header)
 
-reqHeader.Set("if-none-match", "foo")
-resHeader.Set("etag", "bar")
+reqHeader.Set(headers.IfNoneMatch, "foo")
+resHeader.Set(headers.ETag, "bar")
 
 fresh.IsFresh(reqHeader, resHeader)
 // -> false
@@ -37,8 +38,8 @@ fresh.IsFresh(reqHeader, resHeader)
 ```go
 reqHeader, resHeader := make(http.Header), make(http.Header)
 
-reqHeader.Set("if-modified-since", "Mon, 14 Nov 2016 22:05:49 GMT")
-resHeader.Set("last-modified", "Mon, 14 Nov 2016 22:05:47 GMT")
+reqHeader.Set(headers.IfModifiedSince, "Mon, 14 Nov 2016 22:05:49 GMT")
+resHeader.Set(headers.LastModified, "Mon, 14 Nov 2016 22:05:47 GMT")
 
 fresh.IsFresh(reqHeader, resHeader)
 // -> true

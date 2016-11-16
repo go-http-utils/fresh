@@ -4,30 +4,23 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/go-http-utils/headers"
 )
 
 // Version is this package's verison
-const Version = "0.1.0"
-
-// HTTP header fileds
-const (
-	HeaderIfModifiedSince = "if-modified-since"
-	HeaderIfNoneMatch     = "if-none-match"
-	HeaderCacheControl    = "cache-control"
-	HeaderETag            = "etag"
-	HeaderLastModified    = "last-modified"
-)
+const Version = "0.2.0"
 
 // IsFresh check whether cache can be used in this HTTP request
 func IsFresh(reqHeader http.Header, resHeader http.Header) bool {
 	isEtagMatched, isModifiedMatched := false, false
 
-	ifModifiedSince := reqHeader.Get(HeaderIfModifiedSince)
-	ifNoneMatch := reqHeader.Get(HeaderIfNoneMatch)
-	cacheControl := reqHeader.Get(HeaderCacheControl)
+	ifModifiedSince := reqHeader.Get(headers.IfModifiedSince)
+	ifNoneMatch := reqHeader.Get(headers.IfNoneMatch)
+	cacheControl := reqHeader.Get(headers.CacheControl)
 
-	etag := resHeader.Get(HeaderETag)
-	lastModified := resHeader.Get(HeaderLastModified)
+	etag := resHeader.Get(headers.ETag)
+	lastModified := resHeader.Get(headers.LastModified)
 
 	if ifModifiedSince == "" && ifNoneMatch == "" {
 		return false
