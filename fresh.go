@@ -9,20 +9,21 @@ import (
 )
 
 // Version is this package's verison
-const Version = "0.2.0"
+const Version = "0.3.0"
 
 // IsFresh check whether cache can be used in this HTTP request
 func IsFresh(reqHeader http.Header, resHeader http.Header) bool {
 	isEtagMatched, isModifiedMatched := false, false
 
 	ifModifiedSince := reqHeader.Get(headers.IfModifiedSince)
+	ifUnmodifiedSince := reqHeader.Get(headers.IfUnmodifiedSince)
 	ifNoneMatch := reqHeader.Get(headers.IfNoneMatch)
 	cacheControl := reqHeader.Get(headers.CacheControl)
 
 	etag := resHeader.Get(headers.ETag)
 	lastModified := resHeader.Get(headers.LastModified)
 
-	if ifModifiedSince == "" && ifNoneMatch == "" {
+	if ifModifiedSince == "" && ifUnmodifiedSince == "" && ifNoneMatch == "" {
 		return false
 	}
 
@@ -36,6 +37,10 @@ func IsFresh(reqHeader http.Header, resHeader http.Header) bool {
 
 	if lastModified != "" && ifModifiedSince != "" {
 		isModifiedMatched = checkModifedMatch(lastModified, ifModifiedSince)
+	}
+
+	if lastModified != "" && ifUnmodifiedSince != "" {
+		isModifiedMatched = checkUnmodifedMatch(lastModified, ifUnmodifiedSince)
 	}
 
 	return isEtagMatched || isModifiedMatched
@@ -65,6 +70,16 @@ func checkModifedMatch(lastModified, ifModifiedSince string) bool {
 	if lm, err := time.Parse(http.TimeFormat, lastModified); err == nil {
 		if ims, err := time.Parse(http.TimeFormat, ifModifiedSince); err == nil {
 			return lm.Before(ims)
+		}
+	}
+
+	return false
+}
+
+func checkUnmodifedMatch(lastModified, ifUnmodifiedSince string) bool {
+	if lm, err := time.Parse(http.TimeFormat, lastModified); err == nil {
+		if ius, err := time.Parse(http.TimeFormat, ifUnmodifiedSince); err == nil {
+			return lm.After(ius)
 		}
 	}
 

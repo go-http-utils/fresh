@@ -87,6 +87,20 @@ func (s FreshSuite) TestModifiedStale() {
 	s.False(IsFresh(s.reqHeader, s.resHeader))
 }
 
+func (s FreshSuite) TestUnmodifiedFresh() {
+	s.reqHeader.Set(headers.IfUnmodifiedSince, getFormattedTime(2*time.Second))
+	s.resHeader.Set(headers.LastModified, getFormattedTime(4*time.Second))
+
+	s.True(IsFresh(s.reqHeader, s.resHeader))
+}
+
+func (s FreshSuite) TestUnmodifiedStale() {
+	s.reqHeader.Set(headers.IfUnmodifiedSince, getFormattedTime(4*time.Second))
+	s.resHeader.Set(headers.LastModified, getFormattedTime(2*time.Second))
+
+	s.False(IsFresh(s.reqHeader, s.resHeader))
+}
+
 func (s FreshSuite) TestEmptyLastModified() {
 	s.reqHeader.Set(headers.IfModifiedSince, getFormattedTime(4*time.Second))
 
