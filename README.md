@@ -44,3 +44,13 @@ resHeader.Set(headers.LastModified, "Mon, 14 Nov 2016 22:05:47 GMT")
 fresh.IsFresh(reqHeader, resHeader)
 // -> true
 ```
+
+```go
+reqHeader, resHeader := make(http.Header), make(http.Header)
+
+resHeader.Set(headers.IfUnmodifiedSince, "Mon, 14 Nov 2016 22:05:47 GMT")
+reqHeader.Set(headers.LastModified, "Mon, 14 Nov 2016 22:05:49 GMT")
+
+fresh.IsFresh(reqHeader, resHeader)
+// -> true
+```

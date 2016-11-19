@@ -9,7 +9,7 @@ import (
 )
 
 // Version is this package's verison
-const Version = "0.3.0"
+const Version = "0.3.1"
 
 // IsFresh check whether cache can be used in this HTTP request
 func IsFresh(reqHeader http.Header, resHeader http.Header) bool {
@@ -67,21 +67,27 @@ func checkEtagMatch(etagsToMatch []string, etag string) bool {
 }
 
 func checkModifedMatch(lastModified, ifModifiedSince string) bool {
-	if lm, err := time.Parse(http.TimeFormat, lastModified); err == nil {
-		if ims, err := time.Parse(http.TimeFormat, ifModifiedSince); err == nil {
-			return lm.Before(ims)
-		}
+	if lm, ims, ok := parseTimePairs(lastModified, ifModifiedSince); ok == true {
+		return lm.Before(ims)
 	}
 
 	return false
 }
 
 func checkUnmodifedMatch(lastModified, ifUnmodifiedSince string) bool {
-	if lm, err := time.Parse(http.TimeFormat, lastModified); err == nil {
-		if ius, err := time.Parse(http.TimeFormat, ifUnmodifiedSince); err == nil {
-			return lm.After(ius)
-		}
+	if lm, ius, ok := parseTimePairs(lastModified, ifUnmodifiedSince); ok == true {
+		return lm.After(ius)
 	}
 
 	return false
+}
+
+func parseTimePairs(s1, s2 string) (t1 time.Time, t2 time.Time, ok bool) {
+	if t1, err := time.Parse(http.TimeFormat, s1); err == nil {
+		if t2, err := time.Parse(http.TimeFormat, s2); err == nil {
+			return t1, t2, true
+		}
+	}
+
+	return t1, t2, false
 }
