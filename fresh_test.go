@@ -21,6 +21,13 @@ func (s *FreshSuite) SetupTest() {
 	s.resHeader = make(http.Header)
 }
 
+func (s FreshSuite) TestNoCache() {
+	s.reqHeader.Set(headers.CacheControl, "no-cache")
+	s.reqHeader.Set(headers.IfNoneMatch, "foo")
+
+	s.False(IsFresh(s.reqHeader, s.resHeader))
+}
+
 func (s FreshSuite) TestEtagEmpty() {
 	s.False(IsFresh(s.reqHeader, s.resHeader))
 }
@@ -57,6 +64,41 @@ func (s FreshSuite) TestEtagStrongMatch() {
 	s.resHeader.Set(headers.ETag, `"foo"`)
 
 	s.True(IsFresh(s.reqHeader, s.resHeader))
+}
+
+func (s FreshSuite) TestEtagIfMatch() {
+	s.reqHeader.Set(headers.IfMatch, "foo")
+	s.resHeader.Set(headers.ETag, "bar")
+
+	s.True(IsFresh(s.reqHeader, s.resHeader))
+}
+
+func (s FreshSuite) TestWeakEtagIfMatch() {
+	s.reqHeader.Set(headers.IfMatch, "W/foo")
+	s.resHeader.Set(headers.ETag, "W/bar")
+
+	s.True(IsFresh(s.reqHeader, s.resHeader))
+}
+
+func (s FreshSuite) TestStarEtagIfMatch() {
+	s.reqHeader.Set(headers.IfMatch, "*")
+	s.resHeader.Set(headers.ETag, "W/bar")
+
+	s.False(IsFresh(s.reqHeader, s.resHeader))
+}
+
+func (s FreshSuite) TestWeakEtagIfMatchMatched() {
+	s.reqHeader.Set(headers.IfMatch, "W/bar")
+	s.resHeader.Set(headers.ETag, "bar")
+
+	s.False(IsFresh(s.reqHeader, s.resHeader))
+}
+
+func (s FreshSuite) TestEtagIfMatchMatched() {
+	s.reqHeader.Set(headers.IfMatch, "bar")
+	s.resHeader.Set(headers.ETag, "bar")
+
+	s.False(IsFresh(s.reqHeader, s.resHeader))
 }
 
 func (s FreshSuite) TestStaleOnEtagWeakMatch() {

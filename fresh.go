@@ -9,7 +9,7 @@ import (
 )
 
 // Version is this package's verison
-const Version = "0.3.1"
+const Version = "0.4.0"
 
 // IsFresh check whether cache can be used in this HTTP request
 func IsFresh(reqHeader http.Header, resHeader http.Header) bool {
@@ -18,12 +18,16 @@ func IsFresh(reqHeader http.Header, resHeader http.Header) bool {
 	ifModifiedSince := reqHeader.Get(headers.IfModifiedSince)
 	ifUnmodifiedSince := reqHeader.Get(headers.IfUnmodifiedSince)
 	ifNoneMatch := reqHeader.Get(headers.IfNoneMatch)
+	ifMatch := reqHeader.Get(headers.IfMatch)
 	cacheControl := reqHeader.Get(headers.CacheControl)
 
 	etag := resHeader.Get(headers.ETag)
 	lastModified := resHeader.Get(headers.LastModified)
 
-	if ifModifiedSince == "" && ifUnmodifiedSince == "" && ifNoneMatch == "" {
+	if ifModifiedSince == "" &&
+		ifUnmodifiedSince == "" &&
+		ifNoneMatch == "" &&
+		ifMatch == "" {
 		return false
 	}
 
@@ -31,15 +35,19 @@ func IsFresh(reqHeader http.Header, resHeader http.Header) bool {
 		return false
 	}
 
-	if etag != "" {
-		isEtagMatched = checkEtagMatch(trimTags(strings.Split(ifNoneMatch, ",")), etag)
+	if etag != "" && ifNoneMatch != "" {
+		isEtagMatched = checkEtagNoneMatch(trimTags(strings.Split(ifNoneMatch, ",")), etag)
+	}
+
+	if etag != "" && ifMatch != "" && isEtagMatched != true {
+		isEtagMatched = checkEtagMatch(trimTags(strings.Split(ifMatch, ",")), etag)
 	}
 
 	if lastModified != "" && ifModifiedSince != "" {
 		isModifiedMatched = checkModifedMatch(lastModified, ifModifiedSince)
 	}
 
-	if lastModified != "" && ifUnmodifiedSince != "" {
+	if lastModified != "" && ifUnmodifiedSince != "" && isModifiedMatched != true {
 		isModifiedMatched = checkUnmodifedMatch(lastModified, ifUnmodifiedSince)
 	}
 
@@ -56,14 +64,34 @@ func trimTags(tags []string) []string {
 	return trimedTags
 }
 
-func checkEtagMatch(etagsToMatch []string, etag string) bool {
-	for _, etagToMatch := range etagsToMatch {
-		if etagToMatch == "*" || etagToMatch == etag || etagToMatch == "W/"+etag {
+func checkEtagNoneMatch(etagsToNoneMatch []string, etag string) bool {
+	for _, etagToNoneMatch := range etagsToNoneMatch {
+		if etagToNoneMatch == "*" || etagToNoneMatch == etag || etagToNoneMatch == "W/"+etag {
 			return true
 		}
 	}
 
 	return false
+}
+
+func checkEtagMatch(etagsToMatch []string, etag string) bool {
+	for _, etagToMatch := range etagsToMatch {
+		if etagToMatch == "*" {
+			return false
+		}
+
+		if strings.HasPrefix(etagToMatch, "W/") {
+			if etagToMatch == "W/"+etag {
+				return false
+			}
+		} else {
+			if etagToMatch == etag {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func checkModifedMatch(lastModified, ifModifiedSince string) bool {

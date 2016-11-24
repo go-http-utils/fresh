@@ -38,6 +38,16 @@ fresh.IsFresh(reqHeader, resHeader)
 ```go
 reqHeader, resHeader := make(http.Header), make(http.Header)
 
+reqHeader.Set(headers.IfMatch, "foo")
+resHeader.Set(headers.ETag, "bar")
+
+fresh.IsFresh(reqHeader, resHeader)
+// -> true
+```
+
+```go
+reqHeader, resHeader := make(http.Header), make(http.Header)
+
 reqHeader.Set(headers.IfModifiedSince, "Mon, 14 Nov 2016 22:05:49 GMT")
 resHeader.Set(headers.LastModified, "Mon, 14 Nov 2016 22:05:47 GMT")
 
